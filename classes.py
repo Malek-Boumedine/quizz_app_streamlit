@@ -1,6 +1,7 @@
 import time
 import json
 import os
+import streamlit as st
 
 
 
@@ -8,18 +9,18 @@ import os
 
 class Question :
     
-    def __init__(self, numero : int, enonce : str, reponses : list[str], bonne_reponse : list[str]) -> None :
+    def __init__(self, numero: int, enonce: str, reponses: list[str], bonne_reponse: str) :
         self.__numero = numero
         self.__enonce = enonce
         self.reponses = reponses
         self.__bonne_reponse = bonne_reponse
         
         
-    def creer_question(self, liste_question : list["Question"]) -> list["Question"]: 
+    def ajouter_question(self, liste_question: list["Question"]) -> list[dict[int | str | list[str]]] : 
         question = {
-            "numero " : self.__numero, 
-            "enonce" : self.__enonce,
-            "reponses" : self.reponses,
+            "numero" : self.__numero, 
+            "enonce" : self.__enonce, 
+            "reponses" : self.reponses, 
             "bonne_reponse" : self.__bonne_reponse
         }
         liste_question.append(question)
@@ -31,20 +32,20 @@ class Question :
 
 class Theme : 
     
-    def __init__(self, nom_theme : str, duree_requise : int, questions : list[Question]) -> None :
+    def __init__(self, nom_theme: str, duree_requise: int, questions: list[Question]) -> None :
         self.__nom = nom_theme
-        self.duree_requise = duree_requise
+        self.duree_requise = duree_requise if duree_requise else None
         self.questions = questions
 
 
     @staticmethod
-    def creer_fichier_theme(nom : str) -> None : 
+    def creer_fichier_theme(nom: str) -> None : 
         with open(f"./themes/{nom}.json", "w") as f:
             pass
 
 
     @staticmethod
-    def supprimer_theme(nom : str) -> None:
+    def supprimer_theme(nom: str) -> None:
         chemin_fichier = f"./themes/{nom}.json"
         if os.path.exists(chemin_fichier):
             os.remove(chemin_fichier)
@@ -52,17 +53,16 @@ class Theme :
             pass
         
         
-    def ecrire_questions(self, liste_question : list["Question"]) -> None :
-        liste_question_obj_json = json.dumps(liste_question, indent = 4)
+    def ecrire_questions(self, liste_questions) -> None :
         theme = {
-            "nom_theme" : self.__nom,
-            "duree_requise" : self.duree_requise,
-            "questions" : liste_question_obj_json
+            "nom_theme" : self.__nom, 
+            "duree_requise" : self.duree_requise, 
+            "questions" : liste_questions
         }
         
-        objet_json = json.dumps(theme, indent = 4)
-        with open(f"{self.__nom}.json", "w") as f:
-            json.dump(objet_json, f)
+        # objet_json = json.dumps(theme, indent = 4)
+        with open(f"./themes/{self.__nom}.json", "w", encoding='utf-8') as f:
+            json.dump(theme, f, ensure_ascii=False, indent=4)
     
     
     @staticmethod
@@ -75,6 +75,18 @@ class Theme :
                 nom = nom_split[0]
             liste_themes.append(nom)
         liste_themes.append("ajouter un thème")
+        return liste_themes
+    
+    
+    staticmethod
+    def choix_themes_jouer(chemin) -> list : 
+        liste_themes = []
+        themes = os.listdir(chemin)
+        for t in themes : 
+            nom_split = t.split(".")
+            if nom_split[-1].lower() == "json" : 
+                nom = nom_split[0]
+            liste_themes.append(nom)
         return liste_themes
 
 
@@ -187,5 +199,5 @@ class Chronometre:
 
 #############################################################################################################
 
-def refresh() : 
-    __name__
+# autres fonctions
+

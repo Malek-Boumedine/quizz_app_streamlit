@@ -3,6 +3,11 @@ from classes import Theme
 import json
 
 
+st.set_page_config(
+    page_title="Jouer à un quiz",
+    page_icon="🧠",
+)
+
 # --------------------------------------------------------------------------------------------------------
 
 # page qui permet de jouer à un quiz
@@ -38,6 +43,9 @@ if 'score' not in st.session_state:
     
 if 'afficher_score_final' not in st.session_state:
     st.session_state.afficher_score_final = False
+
+if 'desactiver_question_suivante' not in st.session_state:
+    st.session_state.desactiver_question_suivante = False
 
 # --------------------------------------------------------------------------------------------------------
     
@@ -75,7 +83,7 @@ if st.session_state.desactiver_choix :
 if st.session_state.demarrer :
     st.title(f"\nThème du quizz : {choix_theme}\n")
     
-      # Si on doit afficher le score final
+    # Si on doit afficher le score final
     if st.session_state.afficher_score_final:
         st.write(f"Votre score final  :  {st.session_state.score}/{st.session_state.nombre_questions}")
         if st.button("Retour au choix du thème"):
@@ -89,19 +97,40 @@ if st.session_state.demarrer :
             st.session_state.afficher_score_final = False
             st.rerun()
     else :
-        # Bouton question suivante et quitter
-        question_suivante_b, quitter_b = st.columns([3,1])
+        # Afficher la question courante
+        q = st.session_state.questions[st.session_state.index_question]
+      
+        st.markdown(f"<p style='font-size: 20px;'>Question {q['numero']}/{st.session_state.nombre_questions} :</p>", unsafe_allow_html=True)
+        st.markdown(f"<p style='font-size: 20px;'>{q['enonce']} </p>", unsafe_allow_html=True)
+        reponse = st.radio("Selectionnez une réponse : ", q["reponses"], key=f"q_{st.session_state.index_question}")
+        if reponse == q["bonne_reponse"]:
+            st.session_state.score += 1
 
-    
+        # Boutons question suivante et quitter
+        question_suivante_b, quitter_b = st.columns([3,1])
+        if st.session_state.desactiver_question_suivante :
+            with question_suivante_b:
+                if st.button("Question suivante"):
+                    st.session_state.index_question += 1
+                    st.rerun()
+        with quitter_b:
+            if st.button("quitter le thème"):
+                st.session_state.desactiver_choix = False
+                st.session_state.desactiver_demarrer = False
+                st.session_state.desactiver_valider = False
+                st.session_state.index_question = 0
+                st.session_state.score = 0
+                st.session_state.demarrer = False  
+                st.rerun()
+
         # Vérifier si on n'est pas à la dernière question
-        if st.session_state.index_question < len(st.session_state.questions) - 1:
-            question_suivante = question_suivante_b.button("Question suivante")
-            if question_suivante:
+        if st.session_state.index_question < len(st.session_state.questions) - 1 and len(st.session_state.questions) > 1 :
+            if question_suivante_b.button("Question suivante", disabled=st.session_state.desactiver_question_suivante):
                 st.session_state.index_question += 1
                 st.rerun()
-            # boutons quitter :
-            quitter = quitter_b.button("quitter le thème")
-            if quitter : 
+          
+            # bouton quitter
+            if quitter_b.button("quitter le thème"):
                 st.session_state.desactiver_choix = False
                 st.session_state.desactiver_demarrer = False
                 st.session_state.desactiver_valider = False
@@ -111,20 +140,10 @@ if st.session_state.demarrer :
                 st.rerun()
         else:
             st.write("C'est la dernière question !")
-            terminer = st.button("TERMINER")
-            if terminer :
-
+            st.session_state.desactiver_question_suivante = True
+            if st.button("TERMINER"):
                 st.session_state.afficher_score_final = True
                 st.rerun()
-
-        # Afficher la question courante
-        q = st.session_state.questions[st.session_state.index_question]
-        
-        st.markdown(f"<p style='font-size: 20px;'>Question {q['numero']}/{st.session_state.nombre_questions} :</p>", unsafe_allow_html=True)
-        st.markdown(f"<p style='font-size: 20px;'>{q['enonce']} </p>", unsafe_allow_html=True)
-        reponse = st.radio("Selectionnez une réponse : ", q["reponses"], key=f"q_{st.session_state.index_question}")
-        if reponse == q["bonne_reponse"]:
-            st.session_state.score += 1
 
 # --------------------------------------------------------------------------------------------------------
 

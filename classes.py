@@ -2,71 +2,142 @@ import time
 import json
 import os
 import streamlit as st
+from pydantic import BaseModel, Field, constr
+from typing import List, Optional
 
 
 
 #############################################################################################################
 
-class Question :
-    
-    def __init__(self, numero: int, enonce: str, reponses: list[str], bonne_reponse: str) :
-        self.__numero = numero
-        self.__enonce = enonce
-        self.reponses = reponses
-        self.__bonne_reponse = bonne_reponse
-        
-        
-    def ajouter_question(self, liste_question: list["Question"]) -> list[dict[int | str | list[str]]] : 
+# Modèle pour la structure d'une question
+
+class Question(BaseModel):
+    """
+    Représente une question avec ses détails et fournit une méthode pour l'ajouter à une liste.
+
+    Cette classe encapsule les propriétés d'une question, y compris son numéro, son énoncé, ses réponses possibles 
+    et la bonne réponse. Elle inclut également une méthode pour ajouter la question à une liste de questions fournie.
+
+    Attributs:
+        numero (int): L'identifiant unique de la question.
+        enonce (str): L'énoncé de la question, doit comporter au moins un caractère.
+        reponses (List[str]): Une liste de réponses possibles, doit contenir au moins deux éléments.
+        bonne_reponse (str): La bonne réponse parmi la liste des réponses possibles.
+
+    Méthodes:
+        ajouter_question(liste_question): Ajoute les détails de la question à la liste de questions fournie.
+
+    """
+    numero: int
+    enonce: constr(min_length=1)
+    reponses: List[str] = Field(min_items=2)
+    bonne_reponse: str
+
+    def ajouter_question(self, liste_question: List[dict]) -> List[dict]:
+        """
+        Ajoute les détails de la question actuelle à la liste de questions spécifiée.
+
+        Cette méthode crée une représentation sous forme de dictionnaire de la question et l'ajoute à la liste fournie.
+
+        Args:
+            liste_question (List[dict]): La liste à laquelle la question sera ajoutée.
+
+        Returns:
+            List[dict]: La liste mise à jour des questions incluant la question nouvellement ajoutée.
+        """
         question = {
-            "numero" : self.__numero, 
-            "enonce" : self.__enonce, 
-            "reponses" : self.reponses, 
-            "bonne_reponse" : self.__bonne_reponse
+            "numero": self.numero,
+            "enonce": self.enonce,
+            "reponses": self.reponses,
+            "bonne_reponse": self.bonne_reponse
         }
         liste_question.append(question)
-        return liste_question
+        return liste_question    
 
 
 
 #############################################################################################################
 
-class Theme : 
-    
-    def __init__(self, nom_theme: str, duree_requise: int, questions: list[Question]) -> None :
-        self.__nom = nom_theme
-        self.duree_requise = duree_requise if duree_requise else None
-        self.questions = questions
+class Theme(BaseModel) : 
+    """Représente un thème contenant des questions et fournit des méthodes pour gérer les thèmes.
 
+    Cette classe encapsule les détails d'un thème, y compris son nom, la durée requise et une liste de questions. 
+    Elle offre des méthodes statiques pour créer, supprimer et lister des fichiers de thèmes, ainsi qu'une méthode 
+    pour écrire les questions dans un fichier JSON.
+
+    Attributs:
+        nom_theme (str): Le nom du thème, doit comporter au moins un caractère.
+        duree_requise (Optional[int]): La durée requise pour le thème, peut être None.
+        questions (List[Question]): Une liste de questions, doit contenir au moins une question.
+
+    Méthodes:
+        creer_fichier_theme(nom): Crée un fichier JSON pour le thème spécifié.
+        supprimer_theme(nom): Supprime le fichier JSON du thème spécifié.
+        ecrire_questions(liste_questions): Écrit les questions du thème dans un fichier JSON.
+        liste_themes(chemin): Renvoie une liste des noms de thèmes disponibles dans le chemin spécifié.
+        choix_themes_jouer(chemin): Renvoie une liste des noms de thèmes disponibles pour jouer dans le chemin spécifié.
+    """
+    nom_theme: constr(min_length=1)
+    duree_requise: Optional[int] = None
+    questions: List[Question] = Field(min_items=1)  # au moins une question
 
     @staticmethod
     def creer_fichier_theme(nom: str) -> None : 
+        """Crée un fichier JSON pour le thème spécifié.
+
+        Cette méthode crée un fichier vide avec le nom du thème dans le répertoire des thèmes.
+
+        Args:
+            nom (str): Le nom du thème pour lequel le fichier sera créé.
+        """
         with open(f"./themes/{nom}.json", "w") as f:
             pass
 
 
     @staticmethod
     def supprimer_theme(nom: str) -> None:
+        """Supprime le fichier JSON du thème spécifié.
+
+        Cette méthode vérifie si le fichier existe et le supprime s'il est présent.
+
+        Args:
+            nom (str): Le nom du thème dont le fichier sera supprimé.
+        """
         chemin_fichier = f"./themes/{nom}.json"
         if os.path.exists(chemin_fichier):
             os.remove(chemin_fichier)
-        else:
-            pass
         
         
-    def ecrire_questions(self, liste_questions) -> None :
+    def ecrire_questions(self, liste_questions : List[dict]) -> None :
+        """Écrit les questions du thème dans un fichier JSON.
+
+        Cette méthode crée un dictionnaire représentant le thème et l'écrit dans un fichier JSON.
+
+        Args:
+            liste_questions (List[dict]): La liste des questions à écrire dans le fichier.
+        """
         theme = {
-            "nom_theme" : self.__nom, 
+            "nom_theme" : self.nom_theme, 
             "duree_requise" : self.duree_requise, 
             "questions" : liste_questions
         }
         
-        # objet_json = json.dumps(theme, indent = 4)
-        with open(f"./themes/{self.__nom}.json", "w", encoding='utf-8') as f:
+        with open(f"./themes/{self.nom_theme}.json", "w", encoding='utf-8') as f:
             json.dump(theme, f, ensure_ascii=False, indent=4)
     
     
     @staticmethod
-    def liste_themes(chemin) -> list : 
+    def liste_themes(chemin : str) -> list : 
+        """Renvoie une liste des noms de thèmes disponibles dans le chemin spécifié.
+
+        Cette méthode parcourt le répertoire donné et extrait les noms des fichiers JSON.
+
+        Args:
+            chemin (str): Le chemin du répertoire contenant les fichiers de thèmes.
+
+        Returns:
+            list: Une liste des noms de thèmes.
+        """
         liste_themes = []
         themes = os.listdir(chemin)
         for t in themes : 
@@ -78,8 +149,18 @@ class Theme :
         return liste_themes
     
     
-    staticmethod
-    def choix_themes_jouer(chemin) -> list : 
+    @staticmethod
+    def choix_themes_jouer(chemin : str) -> list : 
+        """Renvoie une liste des noms de thèmes disponibles pour jouer dans le chemin spécifié.
+
+        Cette méthode parcourt le répertoire donné et extrait les noms des fichiers JSON.
+
+        Args:
+            chemin (str): Le chemin du répertoire contenant les fichiers de thèmes.
+
+        Returns:
+            list: Une liste des noms de thèmes.
+        """
         liste_themes = []
         themes = os.listdir(chemin)
         for t in themes : 
@@ -91,113 +172,16 @@ class Theme :
 
 
 
-
 #############################################################################################################
 
-class Chronometre:
-    
-    """Une classe pour mesurer le temps écoulé.
+class Minuteur:
+    """Représente un minuteur pour gérer le temps.
 
-    Cette classe permet de démarrer, d'arrêter et de récupérer le temps écoulé. 
-    Elle offre également une méthode pour afficher le temps dans un format lisible.
-
-    Attributs:
-        temps_debut (float): Le temps de début du chronomètre.
-        temps_fin (float): Le temps de fin du chronomètre.
-        en_marche (bool): Indique si le chronomètre est actuellement en cours d'exécution.
+    Cette classe est conçue pour fournir des fonctionnalités de minuteur, permettant de suivre le temps écoulé 
+    et de gérer des événements basés sur le temps. Les détails de son implémentation et de ses méthodes 
+    seront définis ultérieurement.
     """
-
-    def __init__(self):
-
-        """Initialise le Chronometre avec des valeurs par défaut.
-
-        Cette méthode définit les attributs de temps de début et de fin à zéro, 
-        et initialise l'état d'exécution à False, indiquant que le chronomètre n'est pas en cours.
-
-        Args:
-        self: L'instance du Chronometre.
-        """
-
-        # Initialisation des attributs
-        self.temps_debut = 0
-        self.temps_fin = 0
-        self.en_marche = False
-
-    def demarrer(self):
-    
-        """Démarre le chronomètre.
-
-        Cette méthode enregistre le temps de début si le chronomètre n'est pas déjà en cours d'exécution 
-        et met à jour l'état d'exécution pour indiquer que le chronomètre est maintenant actif.
-
-        Args:
-        self: L'instance du Chronometre.
-        """
-
-        # Vérification si le chronomètre est déjà en marche
-        if not self.en_marche:
-            # Enregistrement du temps de début
-            self.temps_debut = time.time()
-            self.en_marche = True
-
-    def arreter(self):
-        
-        """Arrête le chronomètre.
-
-        Cette méthode enregistre le temps de fin si le chronomètre est en cours d'exécution 
-        et met à jour l'état d'exécution pour indiquer que le chronomètre est arrêté.
-
-        Args:
-        self: L'instance du Chronometre.
-        """
-
-        # Vérification si le chronomètre est en marche
-        if self.en_marche:
-            # Enregistrement du temps de fin
-            self.temps_fin = time.time()
-            self.en_marche = False
-
-    def obtenir_temps(self):
-    
-        """Récupère le temps écoulé depuis le démarrage du chronomètre.
-
-        Cette méthode retourne le temps écoulé en secondes. Si le chronomètre est en cours d'exécution, 
-        elle calcule le temps depuis le début, sinon elle calcule le temps total entre le début et la fin.
-
-        Args:
-        self: L'instance du Chronometre.
-
-        Returns:
-        float: Le temps écoulé en secondes.
-        """
-
-        # Calcul du temps écoulé
-        if self.en_marche:
-            return time.time() - self.temps_debut
-        return self.temps_fin - self.temps_debut
-
-    def afficher_temps(self):
-        """Formate le temps écoulé en une chaîne lisible.
-
-        Cette méthode calcule le temps écoulé en heures, minutes et secondes, 
-        puis retourne une chaîne formatée pour une lecture facile au format HH:MM:SS.
-
-        Args:
-        self: L'instance du Chronometre.
-
-        Returns:
-        str: Le temps écoulé formaté en chaîne au format HH:MM:SS.
-        """
-
-        # Récupération du temps écoulé
-        temps = self.obtenir_temps()
-        heures = int(temps // 3600) # Calcul des heures
-        minutes = int((temps % 3600) // 60) # Calcul des minutes
-        secondes = int(temps % 60) # Calcul des secondes
-        return f"{heures:02d}:{minutes:02d}:{secondes:02d}" # Formatage de la chaîne
+    pass
 
 
 #############################################################################################################
-
-# autres fonctions
-

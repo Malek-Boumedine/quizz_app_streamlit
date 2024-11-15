@@ -3,11 +3,9 @@ import streamlit as st
 # @st.cache
 
 st.set_page_config(
-    page_title="Bienvenue",
-    # page_icon="🧠",
+    page_title="Accueil",
     page_icon="🧩",   
 )
-# st.sidebar.success("Veuillez faire un choix")
 
 st.write("# Bienvenue.")
 

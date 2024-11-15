@@ -1,26 +1,16 @@
 {
     "nom_theme": "Sport",
-    "duree_requise": 150,
+    "duree_requise": null,
     "questions": [
         {
-            "numero": 3,
-            "enonce": "azerty",
+            "numero": 1,
+            "enonce": "azer",
             "reponses": [
-                "1",
-                "2",
-                "3"
+                "aze",
+                "sdf",
+                "qsd"
             ],
-            "bonne_reponse": "2"
-        },
-        {
-            "numero": 4,
-            "enonce": "wxcvbn",
-            "reponses": [
-                "a",
-                "z",
-                "e"
-            ],
-            "bonne_reponse": "e"
+            "bonne_reponse": "sdf"
         }
     ]
 }

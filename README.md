@@ -13,8 +13,8 @@ Ce projet est une application de quiz personnalisable développée avec Streamli
 ## Installation
 1. Clonez le dépôt :
    ```bash
-   git clone <URL_DU_DEPOT>
-   cd <NOM_DU_DOSSIER>
+   git clone https://github.com/Malek-Boumedine/quizz_app_streamlit
+   cd quizz_app_streamlit
    ```
 2. Installez les dépendances :
    ```bash
